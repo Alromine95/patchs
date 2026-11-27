@@ -1,0 +1,294 @@
+diff --git a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/IosControlCenterLayout.kt b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/IosControlCenterLayout.kt
+new file mode 100644
+--- /dev/null
++++ b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/IosControlCenterLayout.kt
+@@ -0,0 +1,250 @@
++/*
++ * Copyright (C) 2026 The Aurora AOSP Project
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ */
++
++package com.android.systemui.qs.panels.ui.compose
++
++import androidx.compose.foundation.background
++import androidx.compose.foundation.layout.*
++import androidx.compose.foundation.lazy.grid.GridCells
++import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
++import androidx.compose.foundation.lazy.grid.items
++import androidx.compose.foundation.shape.CircleShape
++import androidx.compose.foundation.shape.RoundedCornerShape
++import androidx.compose.material.icons.Icons
++import androidx.compose.material.icons.filled.*
++import androidx.compose.material3.Icon
++import androidx.compose.material3.MaterialTheme
++import androidx.compose.material3.Text
++import androidx.compose.runtime.Composable
++import androidx.compose.ui.Alignment
++import androidx.compose.ui.Modifier
++import androidx.compose.ui.draw.clip
++import androidx.compose.ui.graphics.Color
++import androidx.compose.ui.graphics.vector.ImageVector
++import androidx.compose.ui.unit.dp
++
++// iOS-like dark colors
++private val TileInactiveColor = Color(0xFF1C1C1E)
++private val TileActiveColor = Color(0xFF0A84FF)
++private val TileWhiteActive = Color(0xFFE5E5EA)
++private val TextColor = Color.White
++
++/**
++ * iOS 18-style Control Center layout.
++ * Replaces the standard Compose QS grid.
++ */
++@Composable
++fun IosControlCenterLayout(
++    modifier: Modifier = Modifier,
++    // Pass your actual controllers/models here
++) {
++    LazyVerticalGrid(
++        columns = GridCells.Fixed(4),
++        modifier = modifier
++            .fillMaxSize()
++            .padding(horizontal = 16.dp, vertical = 8.dp),
++        horizontalArrangement = Arrangement.spacedBy(12.dp),
++        verticalArrangement = Arrangement.spacedBy(12.dp)
++    ) {
++        // --- ROW 1: Connectivity & Media ---
++        item(span = { GridItemSpan(2) }) {
++            ConnectivityBlock()
++        }
++        item(span = { GridItemSpan(2) }) {
++            MediaBlock()
++        }
++
++        // --- ROW 2: Standard Toggles & Vertical Sliders ---
++        item(span = { GridItemSpan(1) }) {
++            IosSquircleToggle(Icons.Default.Lock, "Orientation", isActive = true, activeColor = TileWhiteActive)
++        }
++        item(span = { GridItemSpan(1) }) {
++            IosSquircleToggle(Icons.Default.DoNotDisturb, "DND", isActive = false)
++        }
++        item(span = { GridItemSpan(1) }) {
++            IosVerticalSlider(icon = Icons.Default.BrightnessHigh, fillLevel = 0.5f)
++        }
++        item(span = { GridItemSpan(1) }) {
++            IosVerticalSlider(icon = Icons.Default.VolumeOff, fillLevel = 0.2f)
++        }
++
++        // --- ROW 3: Wide Screen Timeout Pill ---
++        item(span = { GridItemSpan(2) }) {
++            WideTogglePill("1m", "Screen Timeout")
++        }
++        
++        // Empty space to align the next row
++        item(span = { GridItemSpan(2) }) { Spacer(modifier = Modifier) }
++
++        // --- ROW 4 & 5: Standard 4-Column Grid ---
++        val bottomTiles = listOf(
++            IosTileData(Icons.Default.Flashlight, "Flashlight"),
++            IosTileData(Icons.Default.Timer, "Timer"),
++            IosTileData(Icons.Default.Calculate, "Calculator"),
++            IosTileData(Icons.Default.CameraAlt, "Camera"),
++            IosTileData(Icons.Default.Contrast, "Dark Mode", isActive = true),
++            IosTileData(Icons.Default.ScreenRotation, "Rotation"),
++            IosTileData(Icons.Default.BatteryChargingFull, "Low Power"),
++            IosTileData(Icons.Default.GraphicEq, "Voice Memos"),
++            IosTileData(Icons.Default.Settings, "Settings"),
++            IosTileData(Icons.Default.Brightness4, "Dark Mode", isActive = true, activeColor = TileWhiteActive)
++        )
++
++        items(bottomTiles) { tile ->
++            IosSquircleToggle(
++                icon = tile.icon,
++                label = tile.label,
++                isActive = tile.isActive,
++                activeColor = tile.activeColor
++            )
++        }
++    }
++}
++
++@Composable
++private fun ConnectivityBlock() {
++    Box(
++        modifier = Modifier
++            .aspectRatio(1f)
++            .clip(RoundedCornerShape(32.dp))
++            .background(TileInactiveColor)
++            .padding(16.dp)
++    ) {
++        Column(
++            modifier = Modifier.fillMaxSize(),
++            verticalArrangement = Arrangement.SpaceBetween
++        ) {
++            Row(
++                modifier = Modifier.fillMaxWidth(),
++                horizontalArrangement = Arrangement.SpaceBetween
++            ) {
++                IosCircleIcon(Icons.Default.AirplanemodeActive)
++                IosCircleIcon(Icons.Default.CellTower)
++            }
++            Row(
++                modifier = Modifier.fillMaxWidth(),
++                horizontalArrangement = Arrangement.SpaceBetween
++            ) {
++                IosCircleIcon(Icons.Default.Wifi, isActive = true, activeColor = TileActiveColor)
++                IosCircleIcon(Icons.Default.Bluetooth)
++            }
++        }
++    }
++}
++
++@Composable
++private fun MediaBlock() {
++    Box(
++        modifier = Modifier
++            .aspectRatio(1f)
++            .clip(RoundedCornerShape(32.dp))
++            .background(TileInactiveColor)
++            .padding(16.dp),
++        contentAlignment = Alignment.Center
++    ) {
++        Column(horizontalAlignment = Alignment.CenterHorizontally) {
++            Text("Desconocido", color = TextColor, style = MaterialTheme.typography.titleMedium)
++            Text("Desconocido", color = Color.Gray, style = MaterialTheme.typography.bodyMedium)
++            Spacer(modifier = Modifier.height(24.dp))
++            Row(
++                modifier = Modifier.fillMaxWidth(),
++                horizontalArrangement = Arrangement.SpaceEvenly,
++                verticalAlignment = Alignment.CenterVertically
++            ) {
++                Icon(Icons.Default.SkipPrevious, contentDescription = "Prev", tint = TextColor)
++                Icon(Icons.Default.PlayArrow, contentDescription = "Play", tint = TextColor, modifier = Modifier.size(48.dp))
++                Icon(Icons.Default.SkipNext, contentDescription = "Next", tint = TextColor)
++            }
++        }
++    }
++}
++
++@Composable
++private fun IosVerticalSlider(icon: ImageVector, fillLevel: Float) {
++    Box(
++        modifier = Modifier
++            .aspectRatio(0.5f) // Tall shape
++            .clip(RoundedCornerShape(32.dp))
++            .background(TileInactiveColor)
++    ) {
++        // The active fill from the bottom
++        Box(
++            modifier = Modifier
++                .fillMaxWidth()
++                .fillMaxHeight(fillLevel)
++                .align(Alignment.BottomCenter)
++                .background(Color.White)
++        )
++        // The icon at the bottom
++        Icon(
++            imageVector = icon,
++            contentDescription = null,
++            tint = if (fillLevel > 0.1f) Color.Black else Color.Gray,
++            modifier = Modifier
++                .size(32.dp)
++                .align(Alignment.BottomCenter)
++                .padding(bottom = 16.dp)
++        )
++    }
++}
++
++@Composable
++private fun IosSquircleToggle(
++    icon: ImageVector,
++    label: String,
++    isActive: Boolean = false,
++    activeColor: Color = TileActiveColor
++) {
++    Box(
++        modifier = Modifier
++            .aspectRatio(1f)
++            .clip(RoundedCornerShape(24.dp))
++            .background(if (isActive) activeColor else TileInactiveColor),
++        contentAlignment = Alignment.Center
++    ) {
++        Icon(
++            imageVector = icon,
++            contentDescription = label,
++            tint = if (isActive) Color.Black else TextColor,
++            modifier = Modifier.size(32.dp)
++        )
++    }
++}
++
++@Composable
++private fun IosCircleIcon(icon: ImageVector, isActive: Boolean = false, activeColor: Color = TileActiveColor) {
++    Box(
++        modifier = Modifier
++            .size(64.dp)
++            .clip(CircleShape)
++            .background(if (isActive) activeColor else Color(0xFF2C2C2E)),
++        contentAlignment = Alignment.Center
++    ) {
++        Icon(
++            imageVector = icon,
++            contentDescription = null,
++            tint = if (isActive) Color.White else TextColor,
++            modifier = Modifier.size(28.dp)
++        )
++    }
++}
++
++@Composable
++private fun WideTogglePill(value: String, label: String) {
++    Box(
++        modifier = Modifier
++            .fillMaxWidth()
++            .height(72.dp)
++            .clip(RoundedCornerShape(32.dp))
++            .background(TileInactiveColor),
++        contentAlignment = Alignment.CenterStart
++    ) {
++        Row(
++            modifier = Modifier.padding(horizontal = 16.dp),
++            verticalAlignment = Alignment.CenterVertically
++        ) {
++            Box(
++                modifier = Modifier
++                    .size(48.dp)
++                    .clip(CircleShape)
++                    .background(Color(0xFF3A3A3C)),
++                contentAlignment = Alignment.Center
++            ) {
++                Text(value, color = TextColor, style = MaterialTheme.typography.bodyLarge)
++            }
++            Spacer(modifier = Modifier.width(16.dp))
++            Text(label, color = TextColor, style = MaterialTheme.typography.bodyMedium)
++        }
++    }
++}
++
++data class IosTileData(
++    val icon: ImageVector,
++    val label: String,
++    val isActive: Boolean = false,
++    val activeColor: Color = TileActiveColor
++)
++
+diff --git a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/QsStyleChrome.kt b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/QsStyleChrome.kt
+--- a/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/QsStyleChrome.kt
++++ b/packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/QsStyleChrome.kt
+@@ -1,5 +1,7 @@
+ package com.android.systemui.qs.panels.ui.compose
+ 
++import com.android.systemui.qs.QsStyle
++
+ // Note: You will need to modify the composable in this file that determines
+ // which style to render. Look for a "when (style)" statement or a renderer function.
+ // Add the following branch for your Circles (or whichever style you pinned) layout:
+ 
++/*
++    when (style) {
++        QsStyle.CIRCLES -> IosControlCenterLayout(modifier = modifier)
++        // ... other styles
++    }
++*/
