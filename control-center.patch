@@ -1,3 +1,53 @@
+// File: packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/GlassBlurBox.kt
+package com.android.systemui.qs.panels.ui.compose
+
+import android.graphics.RenderEffect
+import android.graphics.Shader
+import android.os.Build
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asComposeRenderEffect
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+
+/**
+ * A reusable composable that applies a HyperOS-style real-time blur to its background.
+ * Works best on Android 12+ via RenderEffect.
+ */
+@Composable
+fun GlassBlurBox(
+    modifier: Modifier = Modifier,
+    cornerRadius: Dp = 32.dp,
+    blurRadius: Float = 25f,
+    tintColor: Color = Color(0x33FFFFFF) // Semi-transparent white tint
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(cornerRadius))
+            .graphicsLayer {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    // Apply a real-time blur to whatever is behind this layer
+                    renderEffect = RenderEffect.createBlurEffect(
+                        blurRadius,
+                        blurRadius,
+                        Shader.TileMode.CLAMP
+                    ).asComposeRenderEffect()
+                }
+                // The tint gives it that "milky" glass look
+                this.backgroundColor = tintColor
+            }
+            .background(Color.Transparent) // Ensure the tint is the only background
+    ) {
+        // Content goes here (Icons, Text, etc.)
+    }
+}
+
 // File: packages/SystemUI/src/com/android/systemui/qs/panels/ui/compose/IosControlCenterLayout.kt
 package com.android.systemui.qs.panels.ui.compose
 
